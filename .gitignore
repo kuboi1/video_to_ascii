@@ -1,0 +1,9 @@
+__pycache__
+temp/*
+
+input/img_ascii/*
+input/video_ascii/*
+output/img_ascii/*
+output/video_ascii/*
+
+!.gitkeep
