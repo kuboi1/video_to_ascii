@@ -1,4 +1,5 @@
 import json
+import pickle
 import os
 import time
 
@@ -8,9 +9,8 @@ class AsciiVideoPlayer:
 
     def play(self, path: str, clear_before: bool = False) -> None:
         print('Loading...')
-        
-        with open(path, 'r') as json_file:
-            input_frames: dict = json.load(json_file)
+
+        input_frames = self._get_input_frames(path)
         
         # Sort frames
         frame_keys = list(input_frames.keys())
@@ -32,6 +32,25 @@ class AsciiVideoPlayer:
 
             self._clear_console()
     
+    def _is_pickle(self, file: str) -> bool:
+        return file.endswith('.pkl')
+
+    def _is_json(self, file: str) -> bool:
+        return file.endswith('.json')
+
+    def _get_input_frames(self, file_path: str) -> dict:
+        file_name = os.path.basename(file_path)
+
+        if self._is_json(file_name):
+            with open(file_path, 'r') as json_file:
+                return json.load(json_file)
+        
+        if self._is_pickle(file_name):
+            with open(file_path, 'rb') as pkl_file:
+                return pickle.load(pkl_file)
+
+        return {}
+
     def _display_frame(self, frame_data: list) -> None:
         for row in frame_data:
             print(''.join(row))
@@ -43,6 +62,6 @@ class AsciiVideoPlayer:
 if __name__ == '__main__':
     player = AsciiVideoPlayer()
 
-    input_path = input('Path to input json: ')
+    input_path = input('Path to input file (.json and .pkl supported): ')
 
     player.play(input_path, True)
