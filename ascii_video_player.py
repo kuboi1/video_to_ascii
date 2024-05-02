@@ -7,30 +7,40 @@ class AsciiVideoPlayer:
     def __init__(self, frame_rate: int = 24) -> None:
         self._frame_rate = frame_rate
 
+        self._frames = {}
+        self._frame_rows = 0
+
     def play(self, path: str, clear_before: bool = False) -> None:
-        print('Loading...')
+        print('Loading video...')
 
         input_frames = self._get_input_frames(path)
         
         # Sort frames
         frame_keys = list(input_frames.keys())
         frame_keys.sort(key=int)
-        ascii_frames = {i: input_frames[i] for i in frame_keys}
+        self._frames = {i: input_frames[i] for i in frame_keys}
+        self._frame_rows = len(list(self._frames.values())[0])
 
         if clear_before:
-            self._clear_console()
+            self._prep_next_frame()
         
-        for i, frame_key in enumerate(ascii_frames):
+        for frame_key in self._frames:
             frame_start = time.time()
 
-            self._display_frame(ascii_frames[frame_key])
+            self._display_frame(self._frames[frame_key])
 
             frame_end = time.time()
 
             # Limit frames per second
-            time.sleep(max(1.0/self._frame_rate - (frame_end - frame_start), 0))
+            time.sleep(max(0, (1.0 / self._frame_rate) - (frame_end - frame_start)))
 
-            self._clear_console()
+            # Prepare next frame by moving the cursor to the start
+            self._prep_next_frame()
+        
+        # Clear the last frame
+        self._clear_console()
+
+        print('Video finished!')
     
     def _is_pickle(self, file: str) -> bool:
         return file.endswith('.pkl')
@@ -52,9 +62,12 @@ class AsciiVideoPlayer:
         return {}
 
     def _display_frame(self, frame_data: list) -> None:
-        for row in frame_data:
-            print(''.join(row))
+        print('\n'.join(frame_data))
 
+    def _prep_next_frame(self) -> None:
+        # Move cursor up by the number of rows in one frame
+        print(f'\033[{self._frame_rows}A\033[2K', end='')
+    
     def _clear_console(self) -> None:
         os.system('cls')
 

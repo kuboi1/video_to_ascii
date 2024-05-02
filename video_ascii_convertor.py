@@ -126,7 +126,7 @@ class VideoAsciiConvertor:
         self._video_player.play(path, True)
 
 if __name__ == '__main__':
-    convertor = VideoAsciiConvertor((100, 100))
+    convertor = VideoAsciiConvertor((150, 150))
     
     input_path = input('Input path (Leave blank for the first video in the input/video_ascii dir): ')
     output_type = input('Input type [j for JSON, p for PICKLE]: ')

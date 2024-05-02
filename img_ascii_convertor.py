@@ -36,13 +36,15 @@ class ImgAsciiConvertor:
         output_ascii = []
 
         for y in range(0, image_size[0] - y_step, y_step):
-            output_row = []
+            # Build row string
+            output_row = ''
             for x in range(0, image_size[1] - x_step, x_step):
                 pixel_chunk = image_array[y:(y + y_step), x:(x + x_step)]
                 average_color_value = np.mean(pixel_chunk)
                 ascii_char = self._convert_gray_to_ascii(average_color_value)
-                output_row.append(ascii_char)
+                output_row += ascii_char
             
+            # Add the row string to output
             output_ascii.append(output_row)
 
         if self._print_output:
