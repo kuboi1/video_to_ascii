@@ -17,13 +17,13 @@ OUTPUT_TYPES = {
 }
 
 class VideoAsciiConvertor:
-    def __init__(self, resolution: tuple) -> None:
+    def __init__(self, resolution_scale: float = 0.2) -> None:
         self._input_path = os.path.abspath('./input/video_ascii')
         self._output_path = os.path.abspath('./output/video_ascii')
         self._temp_path = os.path.abspath('./temp')
 
         self._frame_extractor = VideoFramesExtractor(self._temp_path)
-        self._image_convertor = ImgAsciiConvertor(resolution, False)
+        self._image_convertor = ImgAsciiConvertor(resolution_scale, False)
         self._video_player = AsciiVideoPlayer()
 
         self._output_type = OUTPUT_JSON
@@ -68,6 +68,9 @@ class VideoAsciiConvertor:
             return
 
         self._output_type = OUTPUT_TYPES[output_type]
+    
+    def set_resolution_scale(self, resolution_scale: float) -> None:
+        self._image_convertor.set_resolution_scale(resolution_scale)
 
     def _convert_frames(self, temp_dir: list) -> None:
         print('Preparing ascii convert...', end='\r')
@@ -132,11 +135,13 @@ class VideoAsciiConvertor:
         self._video_player.play(path, True)
 
 if __name__ == '__main__':
-    convertor = VideoAsciiConvertor((150, 150))
+    convertor = VideoAsciiConvertor(0.25)
     
     input_path = input('Input path (Leave blank for the first video in the input/video_ascii dir): ')
-    output_type = input('Input type [j for JSON, p for PICKLE]: ')
+    resolution_scale = float(input('Resolution scale (0.1 - 1.0): '))
+    output_type = input('Output type [j for JSON, p for PICKLE]: ')
     play_after = input('Play after conversion finished [y/n]: ')
 
+    convertor.set_resolution_scale(resolution_scale)
     convertor.set_output_type(output_type)
     convertor.convert(input_path, play_after == 'y')

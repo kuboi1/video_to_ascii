@@ -4,8 +4,8 @@ from math import floor
 from PIL import Image, ImageOps
 
 class ImgAsciiConvertor:
-    def __init__(self, output_resolution: tuple, output_to_file: bool, print_output: bool = False) -> None:
-        self._output_resolution = output_resolution
+    def __init__(self, resolution_scale: float, output_to_file: bool, print_output: bool = False) -> None:
+        self._resolution_scale = resolution_scale
         self._output_to_file = output_to_file
         self._print_output = print_output
 
@@ -27,11 +27,11 @@ class ImgAsciiConvertor:
             image_array = np.array(image)
 
         image_size = image_array.shape
-        x_step = floor(image_size[0] / self._output_resolution[0]) if self._output_resolution[0] < image_size[0] else 1
-        y_step = floor(image_size[1] / self._output_resolution[1]) if self._output_resolution[1] < image_size[1] else 1
+        x_step = int(image_size[0] / (image_size[0] * np.clip(self._resolution_scale, 0.0, 1.0)))
+        y_step = int(image_size[1] / (image_size[1] * np.clip(self._resolution_scale, 0.0, 1.0)))
 
         # Lower sampling in the vertical direction to avoid stretching
-        # y_step = floor(y_step * 2)
+        y_step = int(y_step * 1.8)
 
         output_ascii = []
 
@@ -52,6 +52,9 @@ class ImgAsciiConvertor:
 
         return output_ascii
     
+    def set_resolution_scale(self, resolution_scale: float) -> None:
+        self._resolution_scale = resolution_scale
+
     def _convert_gray_to_ascii(self, gray_value: float) -> str:
         index_value = round(((gray_value / 256) * (len(self._grayscale_chars) - 1)))
         return self._grayscale_chars[index_value]
@@ -63,7 +66,7 @@ class ImgAsciiConvertor:
 
 
 def main() -> None:
-    convertor = ImgAsciiConvertor((100, 50), True, True)
+    convertor = ImgAsciiConvertor(0.1, True, True)
     convertor.convert_input_files()
 
 
