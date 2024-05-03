@@ -4,8 +4,8 @@ import os
 import time
 
 class AsciiVideoPlayer:
-    def __init__(self, frame_rate: int = 24) -> None:
-        self._frame_rate = frame_rate
+    def __init__(self, default_frame_rate: int = 24) -> None:
+        self._default_frame_rate = default_frame_rate
 
         self._frames = {}
         self._frame_rows = 0
@@ -13,7 +13,11 @@ class AsciiVideoPlayer:
     def play(self, path: str, clear_before: bool = False) -> None:
         print('Loading video...')
 
-        input_frames = self._get_input_frames(path)
+        input_data = self._get_input_data(path)
+
+        input_frames = input_data['frames']
+        frame_rate = input_data['fps']
+        frame_rate += 0.1 # Needs a bit of adjusting to be perfect
         
         # Sort frames
         frame_keys = list(input_frames.keys())
@@ -24,31 +28,37 @@ class AsciiVideoPlayer:
         if clear_before:
             self._prep_next_frame()
         
+        passed_frames = 0
+
         for frame_key in self._frames:
-            frame_start = time.time()
+            frame_start = time.perf_counter()
 
             self._display_frame(self._frames[frame_key])
 
-            frame_end = time.time()
-
-            # Limit frames per second
-            time.sleep(max(0, (1.0 / self._frame_rate) - (frame_end - frame_start)))
-
             # Prepare next frame by moving the cursor to the start
             self._prep_next_frame()
+
+            passed_frames += 1
+
+            # Clear console every 5 seconds
+            if (passed_frames % (frame_rate * 5)) == 0:
+                self._clear_console()
+
+            # Limit frames per second
+            time.sleep(max(0, (1.0 / frame_rate) - (time.perf_counter() - frame_start)))
         
         # Clear the last frame
         self._clear_console()
 
         print('Video finished!')
-    
+
     def _is_pickle(self, file: str) -> bool:
         return file.endswith('.pkl')
 
     def _is_json(self, file: str) -> bool:
         return file.endswith('.json')
 
-    def _get_input_frames(self, file_path: str) -> dict:
+    def _get_input_data(self, file_path: str) -> dict:
         file_name = os.path.basename(file_path)
 
         if self._is_json(file_name):
@@ -73,8 +83,14 @@ class AsciiVideoPlayer:
 
 
 if __name__ == '__main__':
-    player = AsciiVideoPlayer()
+    try:
+        player = AsciiVideoPlayer()
 
-    input_path = input('Path to input file (.json and .pkl supported): ')
+        input_path = input('Path to input file (.json and .pkl supported): ')
 
-    player.play(input_path, True)
+        player.play(input_path, True)
+    except KeyboardInterrupt:
+        # Turn off on keyboard interrupt
+        os.system('cls')
+
+        print('Turned off by Keyboard Interrupt')

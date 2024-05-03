@@ -24,10 +24,10 @@ class VideoAsciiConvertor:
 
         self._frame_extractor = VideoFramesExtractor(self._temp_path)
         self._image_convertor = ImgAsciiConvertor(resolution, False)
-        self._video_player = AsciiVideoPlayer(30)
+        self._video_player = AsciiVideoPlayer()
 
         self._output_type = OUTPUT_JSON
-        self._output = {}
+        self._output_frames = {}
 
     def convert_input_files(self) -> None:
         for file in os.listdir(self._input_path):
@@ -49,7 +49,9 @@ class VideoAsciiConvertor:
         self._convert_frames(temp_dir)
         
         # Save output to json
-        result_path = self._save_result(f'{os.path.basename(video_path).split(".")[0]}')
+        result_filename = f'{os.path.basename(video_path).split(".")[0]}'
+        result_fps = self._frame_extractor.get_vidcap_fps()
+        result_path = self._save_result(result_filename, result_fps)
 
         # Clear temp directory
         print('Cleaning up...')
@@ -88,27 +90,31 @@ class VideoAsciiConvertor:
         for thread in threads:
             thread.join()
 
-    def _convert_frame_chunk(self, frame_chunk: list, temp_dir: str):
+    def _convert_frame_chunk(self, frame_chunk: list, temp_dir: str) -> None:
         for frame in frame_chunk:
             frame_number = frame.split('.')[0].split('_')[-1]
-            self._output[frame_number] = self._image_convertor.convert(os.path.join(temp_dir, frame))
+            self._output_frames[frame_number] = self._image_convertor.convert(os.path.join(temp_dir, frame))
 
     def _split_frames(self, frames: list, chunk_size: int = 100):
         for i in range(0, len(frames), chunk_size):  
             yield frames[i:i + chunk_size] 
 
-    def _save_result(self, file_name: str) -> None:
+    def _save_result(self, file_name: str, fps: float) -> None:
         print('Saving the result...')
+        output = {
+            'fps':      fps,
+            'frames':   self._output_frames
+        }
 
         if self._output_type == OUTPUT_JSON:
             result_path = os.path.join(self._output_path, f'{file_name}.json')
             with open(result_path, 'w') as json_file:
-                json.dump(self._output, json_file)
+                json.dump(output, json_file)
         
         if self._output_type == OUTPUT_PICKLE:
             result_path = os.path.join(self._output_path, f'{file_name}.pkl')
             with open(result_path, 'wb') as pkl_file:
-                pickle.dump(self._output, pkl_file)
+                pickle.dump(output, pkl_file)
         
         print()
 
@@ -116,8 +122,8 @@ class VideoAsciiConvertor:
 
     def _print_convert_progress(self, frame_count: int) -> None:
         print('Preparing ascii convert...', end='\r')
-        while len(self._output.keys()) < frame_count:
-            print(f'Converting frames to ascii [{len(self._output.keys())}/{frame_count}]', end='\r')
+        while len(self._output_frames.keys()) < frame_count:
+            print(f'Converting frames to ascii [{len(self._output_frames.keys())}/{frame_count}]', end='\r')
         print('                                                                                    ')
 
     def _play(self, path: str) -> None:

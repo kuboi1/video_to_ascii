@@ -8,21 +8,23 @@ class VideoFramesExtractor:
     def __init__(self, output_path: str) -> None:
         self._output_path = output_path
 
+        self._vidcap = None
+
         self._extracting = False
         self._extracted_frames = 0
         self._frame_count = 0
         self._output_dir = ''
-
+        
     def extract(self, video_path: str) -> str:
-        vidcap = cv2.VideoCapture(video_path)
+        self._vidcap = cv2.VideoCapture(video_path)
 
         self._create_output_dir()
 
-        self._frame_count = int(vidcap.get(cv2.CAP_PROP_FRAME_COUNT))
+        self._frame_count = int(self._vidcap.get(cv2.CAP_PROP_FRAME_COUNT))
 
         self._extracting = True
 
-        extract_thread = threading.Thread(target=self._extract_frames, args=(vidcap,))
+        extract_thread = threading.Thread(target=self._extract_frames)
         pp_thread = threading.Thread(target=self._print_progress)
 
         extract_thread.start()
@@ -32,11 +34,14 @@ class VideoFramesExtractor:
         pp_thread.join()
 
         return self._output_dir
+    
+    def get_vidcap_fps(self) -> float:
+        return self._vidcap.get(cv2.CAP_PROP_FPS)
 
-    def _extract_frames(self, vidcap: cv2.VideoCapture) -> None:
+    def _extract_frames(self) -> None:
         while self._extracting:
             self._extracted_frames += 1
-            self._extracting, image = vidcap.read()
+            self._extracting, image = self._vidcap.read()
             try:
                 cv2.imwrite(os.path.join(self._output_dir, f'frame_{self._extracted_frames}.jpg'), image)
             except:
