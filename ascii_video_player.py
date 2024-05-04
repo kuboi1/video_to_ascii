@@ -4,6 +4,14 @@ import os
 import time
 import keyboard
 
+CONTROL_KEY_PAUSE = 'q'
+CONTROL_KEY_UNPAUSE = 'w'
+CONTROL_KEY_REWIND = 'e'
+CONTROL_KEY_FF = 'r'
+CONTROL_KEY_CLEAR = 't'
+CONTROL_KEY_STOP = 'z'
+CONTROL_KEY_STOP_ALT = 'y'
+
 class AsciiVideoPlayer:
     def __init__(self, default_frame_rate: int = 24) -> None:
         self._default_frame_rate = default_frame_rate
@@ -15,6 +23,14 @@ class AsciiVideoPlayer:
         self._current_frame = 0
 
         self._paused = False
+
+        self._controls = {
+            CONTROL_KEY_PAUSE:  'Pause',
+            CONTROL_KEY_REWIND: 'Rewind',
+            CONTROL_KEY_FF:     'Fast forward',
+            CONTROL_KEY_CLEAR:  'Clear artifacts',
+            CONTROL_KEY_STOP:   'Stop',
+        }
 
     def play(self, path: str, clear_before: bool = False) -> None:
         print('Loading video...')
@@ -88,34 +104,34 @@ class AsciiVideoPlayer:
     def _handle_user_input(self) -> None:
         if self._paused:
             # UNPAUSE
-            if keyboard.is_pressed('w'):
+            if keyboard.is_pressed(CONTROL_KEY_UNPAUSE):
                 if self._paused:
                     self._paused = False
         else:
             # PAUSE
-            if keyboard.is_pressed('q'):
+            if keyboard.is_pressed(CONTROL_KEY_PAUSE):
                 self._paused = True
                 # Clear the controls line
                 print(f'\033[1A\033[2K', end='')
                 print(''.join([' ' for _ in range(self._frame_cols)]))
                 print(f'\033[1A\033[2K', end='')
-                print('| PAUSED: Press f3 to unpause |')
+                print(f'| PAUSED: Press {CONTROL_KEY_UNPAUSE} to unpause |')
             
             # REWIND
-            if keyboard.is_pressed('e'):
+            if keyboard.is_pressed(CONTROL_KEY_REWIND):
                 if self._current_frame - 5 >= self._first_frame:
                     self._current_frame -= 5
             
             # FAST FORWARD
-            if keyboard.is_pressed('r'):
+            if keyboard.is_pressed(CONTROL_KEY_FF):
                 self._current_frame += 4
 
         # CLEAR ARTIFACTS
-        if keyboard.is_pressed('t'):
+        if keyboard.is_pressed(CONTROL_KEY_CLEAR):
             self._clear_console()
         
         # STOP AND TURN OFF
-        if keyboard.is_pressed('z') or keyboard.is_pressed('y'):
+        if keyboard.is_pressed(CONTROL_KEY_STOP) or keyboard.is_pressed(CONTROL_KEY_STOP_ALT):
             self._clear_console()
             self._playing = False
             print('Video stopped by controls')
@@ -130,8 +146,8 @@ class AsciiVideoPlayer:
     def _print_controls(self) -> None:
         if self._paused:
             return
-        
-        print('CONTROLS: | q - Pause | e - Rewind | r - Fast forward | t - Clear artifacts | y - Stop |')
+
+        print('CONTROLS: | ' + ' | '.join([f'{key} - {self._controls[key]}' for key in self._controls]) + ' |')
 
     def _display_frame(self, frame_data: list) -> None:
         if self._paused:
