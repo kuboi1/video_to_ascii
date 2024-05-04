@@ -135,13 +135,17 @@ class VideoAsciiConvertor:
         self._video_player.play(path, True)
 
 if __name__ == '__main__':
-    convertor = VideoAsciiConvertor(0.25)
+    try:
+        convertor = VideoAsciiConvertor(0.25)
     
-    input_path = input('Input path (Leave blank for the first video in the input/video_ascii dir): ')
-    resolution_scale = float(input('Resolution scale (0.1 - 1.0): '))
-    output_type = input('Output type [j for JSON, p for PICKLE]: ')
-    play_after = input('Play after conversion finished [y/n]: ')
+        input_path = input('Input path (Leave blank for the first video in the input/video_ascii dir): ')
+        resolution_scale = float(input('Resolution scale (0.1 - 1.0): '))
+        output_type = input('Output type [j for JSON, p for PICKLE]: ')
+        play_after = input('Play after conversion finished [y/n]: ')
 
-    convertor.set_resolution_scale(resolution_scale)
-    convertor.set_output_type(output_type)
-    convertor.convert(input_path, play_after == 'y')
+        convertor.set_resolution_scale(resolution_scale)
+        convertor.set_output_type(output_type)
+        convertor.convert(input_path, play_after == 'y')
+    except KeyboardInterrupt:
+        # Turn off on keyboard interrupt
+        print('Turned off by Keyboard Interrupt')
