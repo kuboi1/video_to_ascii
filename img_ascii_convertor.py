@@ -31,7 +31,7 @@ class ImgAsciiConvertor:
         y_step = int(image_size[1] / (image_size[1] * np.clip(self._resolution_scale, 0.0, 1.0)))
 
         # Lower sampling in the vertical direction to avoid stretching
-        y_step = int(y_step * 1.8)
+        y_step = int(y_step * (1.5 + self._resolution_scale))
 
         output_ascii = []
 
@@ -66,8 +66,8 @@ class ImgAsciiConvertor:
 
 
 def main() -> None:
-    convertor = ImgAsciiConvertor(0.1, True, True)
-    convertor.convert_input_files()
+    convertor = ImgAsciiConvertor(0.2, False, True)
+    convertor.convert('C:\\stuff\\coding_stuff\\misc_projects\\img_ascii\\temp\\0679609983\\frame_70.jpg', True)
 
 
 if __name__ == '__main__':
