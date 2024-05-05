@@ -18,6 +18,8 @@ OUTPUT_TYPES = {
 
 class VideoAsciiConvertor:
     def __init__(self, resolution_scale: float = 0.2) -> None:
+        self._resolution_scale = resolution_scale
+
         self._input_path = os.path.abspath('./input/video_ascii')
         self._output_path = os.path.abspath('./output/video_ascii')
         self._temp_path = os.path.abspath('./temp')
@@ -104,10 +106,15 @@ class VideoAsciiConvertor:
 
     def _save_result(self, file_name: str, fps: float) -> None:
         print('Saving the result...')
+
         output = {
-            'fps':      fps,
-            'frames':   self._output_frames
+            'fps':          fps,
+            'resolution':   self._resolution_scale,
+            'frames':       self._output_frames
         }
+
+        # Add resolution to file name
+        file_name += f'_0{int(self._resolution_scale * 100)}'
 
         if self._output_type == OUTPUT_JSON:
             result_path = os.path.join(self._output_path, f'{file_name}.json')
