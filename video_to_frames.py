@@ -16,6 +16,7 @@ class VideoFramesExtractor:
         self._output_dir = ''
         
     def extract(self, video_path: str) -> str:
+        # Create vidcap
         self._vidcap = cv2.VideoCapture(video_path)
 
         self._create_output_dir()
@@ -37,6 +38,11 @@ class VideoFramesExtractor:
     
     def get_vidcap_fps(self) -> float:
         return self._vidcap.get(cv2.CAP_PROP_FPS)
+    
+    def close_vidcap(self) -> None:
+        # Close and destruct the vidcap
+        self._vidcap.release()
+        self._vidcap = None
 
     def _extract_frames(self) -> None:
         while self._extracting:

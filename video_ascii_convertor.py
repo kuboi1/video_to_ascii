@@ -2,7 +2,8 @@ import os
 import shutil
 import json
 import pickle
-import threading
+import multiprocessing as mp
+import time
 from math import ceil
 from video_to_frames import VideoFramesExtractor
 from img_ascii_convertor import ImgAsciiConvertor
@@ -28,8 +29,15 @@ class VideoAsciiConvertor:
         self._image_convertor = ImgAsciiConvertor(resolution_scale, False)
         self._video_player = AsciiVideoPlayer()
 
+        self._extract_start = None
+        self._conversion_start = None
+
+        self._num_cores = os.cpu_count()
         self._output_type = OUTPUT_JSON
-        self._output_frames = {}
+
+        # Create shared output dict for multiprocessing
+        manager = mp.Manager()
+        self._output_frames = manager.dict()
 
     def convert_input_files(self) -> None:
         for file in os.listdir(self._input_path):
@@ -43,24 +51,34 @@ class VideoAsciiConvertor:
                     video_path = os.path.join(self._input_path, file)
 
         # Extract frames from video into temp folder
+        self._extract_start = time.time()
         temp_dir = self._frame_extractor.extract(video_path)
-        print('Frames extracted.')
+        result_fps = self._frame_extractor.get_vidcap_fps() # Save fps for output before closing vidcap
+        self._frame_extractor.close_vidcap()
+        print(f'Frames extracted in {(time.time() - self._extract_start):.2f}s')
         print()
 
     	# Convert frames to ascii
+        self._conversion_start = time.time()
         self._convert_frames(temp_dir)
         
-        # Save output to json
+        # Save output to file
+        print('Saving the result...', end='\r')
         result_filename = f'{os.path.basename(video_path).split(".")[0]}'
-        result_fps = self._frame_extractor.get_vidcap_fps()
         result_path = self._save_result(result_filename, result_fps)
 
         # Clear temp directory
-        print('Cleaning up...')
+        print('Cleaning up...      ', end='\r')
         shutil.rmtree(temp_dir)
+
+        print(f'Ascii conversion finished in {(time.time() - self._conversion_start):.2f}s')
+        print()
         print()
 
-        print('CONVERSION FINISHED')
+        print(f'VIDEO CONVERSION FINISHED - Total time {(time.time() - self._extract_start):2f}s')
+        print(f' -> Output file: {result_path}')
+        print()
+        print()
 
         if (play_after_finish):
             self._play(result_path)
@@ -72,45 +90,49 @@ class VideoAsciiConvertor:
         self._output_type = OUTPUT_TYPES[output_type]
     
     def set_resolution_scale(self, resolution_scale: float) -> None:
+        self._resolution_scale = resolution_scale
         self._image_convertor.set_resolution_scale(resolution_scale)
+    
+    def set_num_cores(self, num_cores: int) -> None:
+        # Set num cores in range 1 - max cores
+        self._num_cores = max(1, min(num_cores, os.cpu_count()))
 
     def _convert_frames(self, temp_dir: list) -> None:
-        print('Preparing ascii convert...', end='\r')
-        # Create threads for max each 1/100 of the frames
+        print('Preparing ascii conversion...', end='\r')
+        # Create processes based on num cores attribute
         frames = os.listdir(temp_dir)
-        chunk_size = ceil(len(frames)/100)
+        chunk_size = ceil(len(frames)/self._num_cores)
         split_frames = self._split_frames(frames, chunk_size)
-        threads = []
+        processes = []
 
         for frame_chunk in split_frames:
-            thread = threading.Thread(target=self._convert_frame_chunk, args=(frame_chunk,temp_dir,))
-            threads.append(thread)
-            thread.start()
+            process = mp.Process(target=self._convert_frame_chunk, args=(frame_chunk,temp_dir,len(frames),))
+            processes.append(process)
+            process.start()
+
+        for process in processes:
+            process.join()
         
-        # Add a print progress thread
-        pp_thread = threading.Thread(target=self._print_convert_progress, args=(len(frames),))
-        threads.append(pp_thread)
-        pp_thread.start()
+        # Clear the progress line
+        print('                                                                                    ')
 
-        for thread in threads:
-            thread.join()
-
-    def _convert_frame_chunk(self, frame_chunk: list, temp_dir: str) -> None:
+    def _convert_frame_chunk(self, frame_chunk: list, temp_dir: str, frame_count: int) -> None:
         for frame in frame_chunk:
             frame_number = frame.split('.')[0].split('_')[-1]
             self._output_frames[frame_number] = self._image_convertor.convert(os.path.join(temp_dir, frame))
+
+            # Print progress
+            self._print_convert_progress(frame_count)
 
     def _split_frames(self, frames: list, chunk_size: int = 100):
         for i in range(0, len(frames), chunk_size):  
             yield frames[i:i + chunk_size] 
 
     def _save_result(self, file_name: str, fps: float) -> None:
-        print('Saving the result...')
-
         output = {
             'fps':          fps,
             'resolution':   self._resolution_scale,
-            'frames':       self._output_frames
+            'frames':       dict(self._output_frames)
         }
 
         # Add resolution to file name
@@ -125,16 +147,16 @@ class VideoAsciiConvertor:
             result_path = os.path.join(self._output_path, f'{file_name}.pkl')
             with open(result_path, 'wb') as pkl_file:
                 pickle.dump(output, pkl_file)
-        
-        print()
 
         return result_path
 
     def _print_convert_progress(self, frame_count: int) -> None:
-        print('Preparing ascii convert...', end='\r')
-        while len(self._output_frames.keys()) < frame_count:
-            print(f'Converting frames to ascii [{len(self._output_frames.keys())}/{frame_count}]', end='\r')
-        print('                                                                                    ')
+        time_passed = time.time() - self._conversion_start
+        converted_frames = len(self._output_frames.keys())
+        fps = converted_frames / time_passed
+        estimate = int((frame_count - converted_frames) / fps)
+
+        print(f'Converting frames to ascii [{converted_frames}/{frame_count}] | est. time left: {estimate}s            ', end='\r')
 
     def _play(self, path: str) -> None:
         print()
@@ -147,10 +169,12 @@ if __name__ == '__main__':
     
         input_path = input('Input path (Leave blank for the first video in the input/video_ascii dir): ')
         resolution_scale = float(input('Resolution scale (0.1 - 1.0): '))
+        num_cores = int(input(f'Number of cores to use for conversion (1 - {os.cpu_count()}): '))
         output_type = input('Output type [j for JSON, p for PICKLE]: ')
         play_after = input('Play after conversion finished [y/n]: ')
 
         convertor.set_resolution_scale(resolution_scale)
+        convertor.set_num_cores(num_cores)
         convertor.set_output_type(output_type)
         convertor.convert(input_path, play_after == 'y')
     except KeyboardInterrupt:
