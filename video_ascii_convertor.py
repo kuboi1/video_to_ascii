@@ -4,6 +4,7 @@ import json
 import pickle
 import multiprocessing as mp
 import time
+import ui
 from math import ceil
 from video_to_frames import VideoFramesExtractor
 from img_ascii_convertor import ImgAsciiConvertor
@@ -18,8 +19,10 @@ OUTPUT_TYPES = {
 }
 
 class VideoAsciiConvertor:
-    def __init__(self, resolution_scale: float = 0.2) -> None:
+    def __init__(self, resolution_scale: float, num_cores: int, output_type: str) -> None:
         self._resolution_scale = resolution_scale
+        self.set_num_cores(num_cores)
+        self.set_output_type(output_type)
 
         self._input_path = os.path.abspath('./input/video_ascii')
         self._output_path = os.path.abspath('./output/video_ascii')
@@ -31,9 +34,6 @@ class VideoAsciiConvertor:
 
         self._extract_start = None
         self._conversion_start = None
-
-        self._num_cores = os.cpu_count()
-        self._output_type = OUTPUT_JSON
 
         # Create shared output dict for multiprocessing
         manager = mp.Manager()
@@ -75,10 +75,10 @@ class VideoAsciiConvertor:
         print()
         print()
 
-        print(f'VIDEO CONVERSION FINISHED - Total time {(time.time() - self._extract_start):2f}s')
-        print(f' -> Output file: {result_path}')
-        print()
-        print()
+        ui.print_lines([
+            f'VIDEO CONVERSION FINISHED - Total time {(time.time() - self._extract_start):.2f}s',
+            f' -> Output file: {result_path}'
+        ], seperate_chunk=True)
 
         if (play_after_finish):
             self._play(result_path)
@@ -162,21 +162,3 @@ class VideoAsciiConvertor:
         print()
         input('Press enter to play the ascii video!')
         self._video_player.play(path, True)
-
-if __name__ == '__main__':
-    try:
-        convertor = VideoAsciiConvertor(0.25)
-    
-        input_path = input('Input path (Leave blank for the first video in the input/video_ascii dir): ')
-        resolution_scale = float(input('Resolution scale (0.1 - 1.0): '))
-        num_cores = int(input(f'Number of cores to use for conversion (1 - {os.cpu_count()}): '))
-        output_type = input('Output type [j for JSON, p for PICKLE]: ')
-        play_after = input('Play after conversion finished [y/n]: ')
-
-        convertor.set_resolution_scale(resolution_scale)
-        convertor.set_num_cores(num_cores)
-        convertor.set_output_type(output_type)
-        convertor.convert(input_path, play_after == 'y')
-    except KeyboardInterrupt:
-        # Turn off on keyboard interrupt
-        print('Turned off by Keyboard Interrupt')

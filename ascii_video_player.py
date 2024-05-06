@@ -3,6 +3,7 @@ import pickle
 import os
 import time
 import keyboard
+import ui
 
 CONTROL_KEY_PAUSE = 'q'
 CONTROL_KEY_UNPAUSE = 'w'
@@ -80,7 +81,7 @@ class AsciiVideoPlayer:
         # Clear the last frame
         self._clear_console()
 
-        print('Video finished!')
+        ui.print_lines(['Video finished playing!'], seperate_chunk=True)
 
     def _is_pickle(self, file: str) -> bool:
         return file.endswith('.pkl')
@@ -134,7 +135,7 @@ class AsciiVideoPlayer:
         if keyboard.is_pressed(CONTROL_KEY_STOP) or keyboard.is_pressed(CONTROL_KEY_STOP_ALT):
             self._clear_console()
             self._playing = False
-            print('Video stopped by controls')
+            ui.print_lines(['Video stopped by controls'], seperate_chunk=True)
             exit(0)
     
     def _print_seperator(self) -> None:
@@ -174,10 +175,20 @@ class AsciiVideoPlayer:
 
 if __name__ == '__main__':
     try:
+        ui.print_lines([
+            'ASCII VIDEO PLAYER',
+            ' - Plays an ascii video in the console',
+            ' - .json and .pkl files made using the Ascii Video Convertor supported'
+        ], seperate_chunk=True)
+
+        input_path = ui.get_input(
+            prompt='Path to input file',
+            custom_validator=ui.file_type_validator,
+            custom_validator_args=['json', 'pkl'],
+            custom_validator_error='Invalid file type - only .json and .pkl supported'
+        )
+
         player = AsciiVideoPlayer()
-
-        input_path = input('Path to input file (.json and .pkl supported): ')
-
         player.play(input_path, True)
     except KeyboardInterrupt:
         # Turn off on keyboard interrupt

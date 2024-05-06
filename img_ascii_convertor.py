@@ -1,6 +1,7 @@
 import os
+import json
+import ui
 import numpy as np
-from math import floor
 from PIL import Image, ImageOps
 
 class ImgAsciiConvertor:
@@ -18,11 +19,11 @@ class ImgAsciiConvertor:
         for file in os.listdir(self._input_path):
             self.convert(file)
 
-    def convert(self, file: str, print_message: bool = False) -> list:
+    def convert(self, image_path: str, print_message: bool = False) -> list:
         if print_message:
-            print(f'Converting {os.path.basename(file)} to ascii...')
+            print(f'Converting {os.path.basename(image_path)} to ascii...')
 
-        with Image.open(os.path.join(self._input_path, file)) as base_image:
+        with Image.open(os.path.join(self._input_path, image_path)) as base_image:
             image = ImageOps.grayscale(base_image)
             image_array = np.array(image)
 
@@ -46,6 +47,16 @@ class ImgAsciiConvertor:
             
             # Add the row string to output
             output_ascii.append(output_row)
+        
+        if self._output_to_file:
+            result_filename = f'{os.path.basename(image_path).split(".")[0]}'
+            result_path = self._save_result(output_ascii, result_filename)
+
+        outro_lines = ['CONVERSION FINISHED']
+        if self._output_to_file:
+            outro_lines.append(f' -> Output file: {result_path}')
+
+        ui.print_lines(outro_lines, seperate_chunk=True)
 
         if self._print_output:
             self.print_result(output_ascii)
@@ -59,16 +70,20 @@ class ImgAsciiConvertor:
         index_value = round(((gray_value / 256) * (len(self._grayscale_chars) - 1)))
         return self._grayscale_chars[index_value]
 
+    def _save_result(self, output: list, file_name: str) -> str:
+        # Add resolution to file name
+        file_name += f'_0{int(self._resolution_scale * 100)}'
+
+        result_path = os.path.join(self._output_path, f'{file_name}.json')
+        with open(result_path, 'w') as json_file:
+            json.dump(output, json_file)
+        
+        return result_path
+
     def print_result(self, result: list) -> None:
-        os.system('cls')
-        for row in result:
-            print(''.join(row))
-
-
-def main() -> None:
-    convertor = ImgAsciiConvertor(0.2, False, True)
-    convertor.convert('C:\\stuff\\coding_stuff\\misc_projects\\img_ascii\\temp\\0679609983\\frame_70.jpg', True)
-
-
-if __name__ == '__main__':
-    main()
+        ui.print_lines([
+            'RESULT:',
+            '',
+            *[''.join(row) for row in result]
+        ], max_separator_length=100)
+        ui.print_separator(length=100)
