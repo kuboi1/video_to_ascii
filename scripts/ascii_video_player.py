@@ -171,27 +171,3 @@ class AsciiVideoPlayer:
     
     def _clear_console(self) -> None:
         os.system('cls')
-
-
-if __name__ == '__main__':
-    try:
-        ui.print_lines([
-            'ASCII VIDEO PLAYER',
-            ' - Plays an ascii video in the console',
-            ' - .json and .pkl files made using the Ascii Video Convertor supported'
-        ], seperate_chunk=True)
-
-        input_path = ui.get_input(
-            prompt='Path to input file',
-            custom_validator=ui.file_type_validator,
-            custom_validator_args=['json', 'pkl'],
-            custom_validator_error='Invalid file type - only .json and .pkl supported'
-        )
-
-        player = AsciiVideoPlayer()
-        player.play(input_path, True)
-    except KeyboardInterrupt:
-        # Turn off on keyboard interrupt
-        os.system('cls')
-
-        print('Turned off by Keyboard Interrupt')
