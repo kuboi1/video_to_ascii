@@ -6,4 +6,6 @@ input/video_ascii/*
 output/img_ascii/*
 output/video_ascii/*
 
+!output/video_ascii/bad_apple_020.pkl
+
 !.gitkeep
