@@ -2,9 +2,6 @@ import os
 import scripts.ui as ui
 from scripts.img_ascii_convertor import ImgAsciiConvertor
 
-INPUT_PATH = os.path.abspath('.\\input\\img_ascii')
-OUTPUT_PATH = os.path.abspath('.\\output\\img_ascii')
-
 
 # Define input options
 class InputOptions:
