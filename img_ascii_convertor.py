@@ -9,7 +9,7 @@ class ImgAsciiConvertor:
         self._output_to_file = output_to_file
         self._print_output = print_output
 
-        self._grayscale_chars = '$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\|()1{[}]?-_+~<>i!lI;:,"^`\'. '
+        self._grayscale_chars = ' .\'`^",:;Il!i><~+_-?]}[{1)(|\/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$'
 
         self._input_path = os.path.abspath('./input/img_ascii')
         self._output_path = os.path.abspath('./output/img_ascii')
