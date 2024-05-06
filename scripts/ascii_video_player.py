@@ -3,7 +3,7 @@ import pickle
 import os
 import time
 import keyboard
-import ui
+import scripts.ui as ui
 
 CONTROL_KEY_PAUSE = 'q'
 CONTROL_KEY_UNPAUSE = 'w'

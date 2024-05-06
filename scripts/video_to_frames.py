@@ -4,6 +4,7 @@ import threading
 from string import digits
 from random import choice as rand_choice
 
+
 class VideoFramesExtractor:
     def __init__(self, output_path: str) -> None:
         self._output_path = output_path

@@ -1,6 +1,6 @@
-import ui
+import scripts.ui as ui
 import os
-from video_ascii_convertor import VideoAsciiConvertor
+from scripts.video_ascii_convertor import VideoAsciiConvertor
 
 # Define input options
 class InputOptions:

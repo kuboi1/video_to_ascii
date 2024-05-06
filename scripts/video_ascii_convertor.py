@@ -4,11 +4,14 @@ import json
 import pickle
 import multiprocessing as mp
 import time
-import ui
+import scripts.ui as ui
 from math import ceil
-from video_to_frames import VideoFramesExtractor
-from img_ascii_convertor import ImgAsciiConvertor
-from ascii_video_player import AsciiVideoPlayer
+from scripts.video_to_frames import VideoFramesExtractor
+from scripts.img_ascii_convertor import ImgAsciiConvertor
+from scripts.ascii_video_player import AsciiVideoPlayer
+
+
+BASE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 
 OUTPUT_JSON = 'JSON'
 OUTPUT_PICKLE = 'PICKLE'
@@ -24,9 +27,9 @@ class VideoAsciiConvertor:
         self.set_num_cores(num_cores)
         self.set_output_type(output_type)
 
-        self._input_path = os.path.abspath('./input/video_ascii')
-        self._output_path = os.path.abspath('./output/video_ascii')
-        self._temp_path = os.path.abspath('./temp')
+        self._input_path = os.path.join(BASE_PATH, 'input/video_ascii')
+        self._output_path = os.path.join(BASE_PATH, 'output/video_ascii')
+        self._temp_path = os.path.join(BASE_PATH, 'temp')
 
         self._frame_extractor = VideoFramesExtractor(self._temp_path)
         self._image_convertor = ImgAsciiConvertor(resolution_scale, False)

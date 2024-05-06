@@ -65,7 +65,8 @@ def get_bool_input(prompt: str) -> bool:
         options=['y', 'n']
     )
 
-    return user_input == 'y'
+    # Default enter (empty string) to y
+    return user_input == 'y' or user_input == ''
 
 # VISUAL PRINTS
 

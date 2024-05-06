@@ -1,8 +1,11 @@
 import os
 import json
-import ui
+import scripts.ui as ui
 import numpy as np
 from PIL import Image, ImageOps
+
+
+BASE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 
 class ImgAsciiConvertor:
     def __init__(self, resolution_scale: float, output_to_file: bool, print_output: bool = False) -> None:
@@ -12,8 +15,8 @@ class ImgAsciiConvertor:
 
         self._grayscale_chars = ' .\'`^",:;Il!i><~+_-?]}[{1)(|\/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$'
 
-        self._input_path = os.path.abspath('./input/img_ascii')
-        self._output_path = os.path.abspath('./output/img_ascii')
+        self._input_path = os.path.join(BASE_PATH, 'input\\img_ascii')
+        self._output_path = os.path.join(BASE_PATH, 'output\\img_ascii')
 
     def convert_input_files(self) -> None:
         for file in os.listdir(self._input_path):
@@ -52,11 +55,12 @@ class ImgAsciiConvertor:
             result_filename = f'{os.path.basename(image_path).split(".")[0]}'
             result_path = self._save_result(output_ascii, result_filename)
 
-        outro_lines = ['CONVERSION FINISHED']
-        if self._output_to_file:
-            outro_lines.append(f' -> Output file: {result_path}')
+        if print_message:
+            outro_lines = ['CONVERSION FINISHED']
+            if self._output_to_file:
+                outro_lines.append(f' -> Output file: {result_path}')
 
-        ui.print_lines(outro_lines, seperate_chunk=True)
+            ui.print_lines(outro_lines, seperate_chunk=True)
 
         if self._print_output:
             self.print_result(output_ascii)
