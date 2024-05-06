@@ -1,4 +1,3 @@
-import os
 import scripts.ui as ui
 from scripts.img_ascii_convertor import ImgAsciiConvertor
 
