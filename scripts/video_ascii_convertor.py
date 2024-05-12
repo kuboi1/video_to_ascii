@@ -48,10 +48,8 @@ class VideoAsciiConvertor:
             self.convert(os.path.join(self._input_path, file))
 
     def convert(self, video_path: str, play_after_finish: bool = False) -> str:
-        if video_path == '':
-            for file in os.listdir(self._input_path):
-                if not file.startswith('.'):
-                    video_path = os.path.join(self._input_path, file)
+        if not os.path.isfile(video_path):
+            raise FileNotFoundError
 
         # Extract frames from video into temp folder
         self._extract_start = time.time()

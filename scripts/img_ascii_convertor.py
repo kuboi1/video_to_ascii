@@ -23,10 +23,13 @@ class ImgAsciiConvertor:
             self.convert(file)
 
     def convert(self, image_path: str, print_message: bool = False) -> list:
+        if not os.path.isfile(image_path):
+            raise FileNotFoundError
+
         if print_message:
             print(f'Converting {os.path.basename(image_path)} to ascii...')
 
-        with Image.open(os.path.join(self._input_path, image_path)) as base_image:
+        with Image.open(image_path) as base_image:
             image = ImageOps.grayscale(base_image)
             image_array = np.array(image)
 

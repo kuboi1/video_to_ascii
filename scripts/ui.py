@@ -70,7 +70,7 @@ def get_bool_input(prompt: str) -> bool:
 
 # VISUAL PRINTS
 
-def print_separator(separator: str = '-', length: int = 50) -> None:
+def print_separator(separator: str = '-', length: int = 100) -> None:
     # Make sure lenght is not negative
     length = max(1, length)
 
